@@ -1,47 +1,36 @@
-name: "Paso 3 — Mapa de Procesos (flujo único)"
-
+name: "Paso 3 — Mapa de Procesos (flujo único) VetReminder"
+ 
 # Úsalo si tu modelo de ciclo de vida NO tiene procesos en paralelo
 # (secuencial, iterativo, incremental, cascada simple, etc.).
 # Si tu modelo sí tiene ramas en paralelo, usa en su lugar el workflow
 # "mapa-procesos-paralelo.yml".
 #
-# Fíjate el primer proceso (Requisitos) crea el documento Y agrega su propia
+# Modelo de ciclo de vida de VetReminder: incremental (flujo único).
+# Solo se representan los procesos clave o misionales, en el orden de la
+# sección 3.3 de la wiki (03a-Mapa-Procesos-Caracterizacion). Los procesos
+# estratégicos y de apoyo se caracterizan únicamente en la wiki.
+#
+# Fíjate el primer proceso (6.4.2) crea el documento Y agrega su propia
 # información en el mismo job (en dos steps independientes), y el
-# último proceso (Testing) agrega su información Y hace el commit/push
-# en el mismo job. Así, cada job que ves en la pestaña Actions es un
-# proceso real del proyecto — no hay jobs de "plumbing" sin información
-# relevante ensuciando la vista del flujo.
+# último proceso (6.4.11 Validación) agrega su información Y hace el
+# commit/push en el mismo job. Así, cada job que ves en la pestaña Actions
+# es un proceso real del proyecto.
 #
 # Cómo usarlo:
-# 1. Reemplaza el contenido de los jobs de ejemplo (requisitos, diseño,
-#    implementacion, testing) por los procesos reales que tu equipo
-#    seleccionó en el Paso 3. Puedes duplicar el bloque de un job tantas
-#    veces como procesos tengas, ajustando el "needs:" para reflejar el
-#    orden real de tu modelo de ciclo de vida.
-# 2. El primer job de la cadena es el único que debe crear el documento
-#    (con el encabezado) además de agregar su proceso, cada cosa en su
-#    propio step; los jobs intermedios solo descargan, agregan y vuelven
-#    a subir el artifact; el último job, además de agregar su proceso,
-#    hace el commit/push.
-# 3. Ve a la pestaña "Actions" -> este workflow -> "Run workflow".
+# 1. Ve a la pestaña "Actions" -> este workflow -> "Run workflow".
 #    Se dispara SOLO manualmente para no gastar minutos de CI de la
 #    organización.
-# 4. El resultado final queda en docs/mapa-procesos.md.
-
+# 2. El resultado final queda en docs/mapa-procesos.md.
+ 
 on:
   workflow_dispatch:
-
+ 
 permissions:
   contents: write
-
+ 
 jobs:
-  # -----------------------------------------------------------------
-  # Primer proceso: crea el documento (con su encabezado) en un step, y
-  # agrega su propia información en otro step, independiente. No tiene
-  # "needs:" porque es la raíz de la cadena.
-  # -----------------------------------------------------------------
-  requisitos:
-    name: "Requisitos"
+  req:
+    name: "6.4.2 Definición de necesidades y requisitos de los interesados"
     runs-on: ubuntu-latest
     steps:
       - name: Crear documento
@@ -49,23 +38,23 @@ jobs:
           mkdir -p docs
           cat <<'EOF' > docs/mapa-procesos.md
           # Mapa de Procesos y Modelo de Ciclo de Vida
-
+ 
           > Generado con el workflow de flujo único. La definición formal del
           > modelo de ciclo de vida (justificación, orden, relación entre
           > procesos) se documenta en la wiki, página `04c-Modelo-Ciclo-Vida`,
           > no en este archivo.
-
+ 
           EOF
       - name: Agregar este proceso al documento
         run: |
           cat <<'EOF' >> docs/mapa-procesos.md
-          ## Proceso: Requisitos
-
-          - **Entradas:** Modelo verbal extendido, necesidades de negocio e interesados
-          - **Actividades:** Elicitación, análisis y especificación de requisitos
-          - **Salidas:** Documento de especificación de requisitos
-          - **Recursos:** BABOK v3, entrevistas/supuestos del equipo
-
+          ## Proceso: 6.4.2 Definición de necesidades y requisitos de los interesados
+ 
+          - **Entradas:** Enunciado de VetReminder, extensión del modelo verbal (01-Extension-Modelo-Verbal)
+          - **Actividades:** Identificar a los actores, definir las necesidades del negocio y las de cada interesado
+          - **Salidas:** Actores (02b-Actores), necesidades del negocio (02c-Necesidades-Negocio) y de los interesados (02d-Necesidades-Interesados)
+          - **Recursos:** Wiki de GitHub, BABOK v3, docente o monitor para aclarar dudas
+ 
           EOF
       - name: Subir artifact
         uses: actions/upload-artifact@v4
@@ -73,15 +62,10 @@ jobs:
           name: mapa-procesos
           path: docs/mapa-procesos.md
           overwrite: true
-
-  # -----------------------------------------------------------------
-  # Procesos intermedios: descargan el documento, agregan su proceso y
-  # lo vuelven a subir. Copia este bloque por cada proceso intermedio
-  # que necesites.
-  # -----------------------------------------------------------------
-  diseno:
-    name: "Diseño"
-    needs: requisitos
+ 
+  reqsw:
+    name: "6.4.3 Definición de requisitos del sistema/software"
+    needs: req
     runs-on: ubuntu-latest
     steps:
       - name: Descargar artifact
@@ -92,13 +76,13 @@ jobs:
       - name: Agregar este proceso al documento
         run: |
           cat <<'EOF' >> docs/mapa-procesos.md
-          ## Proceso: Diseño
-
-          - **Entradas:** Documento de especificación de requisitos
-          - **Actividades:** Definición de módulos, interfaces y decisiones de diseño
-          - **Salidas:** Vista arquitectónica del sistema
-          - **Recursos:** Requisitos funcionales/no funcionales priorizados
-
+          ## Proceso: 6.4.3 Definición de requisitos del sistema/software
+ 
+          - **Entradas:** Necesidades del negocio y de los interesados, requisitos de interfaz (02e-Requisitos-Interfaz)
+          - **Actividades:** Redactar los requisitos funcionales como historias de usuario con criterios de aceptación, los no funcionales con métrica y umbral, asociarlos a su módulo y establecer la línea base
+          - **Salidas:** Módulos y requisitos como Issues, vista «Registro de Requisitos» del Project
+          - **Recursos:** Formularios de Issues (módulo, RF y RNF), GitHub Projects
+ 
           EOF
       - name: Subir artifact
         uses: actions/upload-artifact@v4
@@ -106,10 +90,10 @@ jobs:
           name: mapa-procesos
           path: docs/mapa-procesos.md
           overwrite: true
-
-  implementacion:
-    name: "Implementación"
-    needs: diseno
+ 
+  arq:
+    name: "6.4.4 Definición de la arquitectura"
+    needs: reqsw
     runs-on: ubuntu-latest
     steps:
       - name: Descargar artifact
@@ -120,13 +104,13 @@ jobs:
       - name: Agregar este proceso al documento
         run: |
           cat <<'EOF' >> docs/mapa-procesos.md
-          ## Proceso: Implementación
-
-          - **Entradas:** Vista arquitectónica del sistema
-          - **Actividades:** Construcción de los módulos definidos en el diseño
-          - **Salidas:** Componentes de software construidos
-          - **Recursos:** Estándares de codificación, entorno de desarrollo
-
+          ## Proceso: 6.4.4 Definición de la arquitectura
+ 
+          - **Entradas:** Requisitos del incremento, requisitos de interfaz, restricciones tecnológicas (React Native y Firebase)
+          - **Actividades:** Definir los componentes (app móvil, portal veterinario, servicios de Firebase, conectores con las clínicas), sus interfaces y cómo se cumplen los RNF de disponibilidad, rendimiento y seguridad
+          - **Salidas:** Documento y diagrama de arquitectura
+          - **Recursos:** Herramienta de diagramas (draw.io), documentación de Firebase y React Native
+ 
           EOF
       - name: Subir artifact
         uses: actions/upload-artifact@v4
@@ -134,15 +118,150 @@ jobs:
           name: mapa-procesos
           path: docs/mapa-procesos.md
           overwrite: true
-
-  # -----------------------------------------------------------------
-  # Último proceso: agrega su propia información Y, en el mismo job,
-  # hace el commit/push del documento final. Cambia el "needs:" para
-  # que apunte a tu ÚLTIMO proceso real.
-  # -----------------------------------------------------------------
-  testing:
-    name: "Testing"
-    needs: implementacion
+ 
+  dis:
+    name: "6.4.5 Definición del diseño"
+    needs: arq
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: mapa-procesos
+          path: docs/
+      - name: Agregar este proceso al documento
+        run: |
+          cat <<'EOF' >> docs/mapa-procesos.md
+          ## Proceso: 6.4.5 Definición del diseño
+ 
+          - **Entradas:** Arquitectura, requisitos del incremento
+          - **Actividades:** Diseñar el modelo de datos en Firestore, las pantallas y la navegación, y aplicar las pautas de accesibilidad
+          - **Salidas:** Modelo de datos, prototipos de pantallas, especificación de diseño por módulo
+          - **Recursos:** Herramienta de prototipado (Figma u otra), pautas WCAG 2.1
+ 
+          EOF
+      - name: Subir artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mapa-procesos
+          path: docs/mapa-procesos.md
+          overwrite: true
+ 
+  imp:
+    name: "6.4.7 Implementación"
+    needs: dis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: mapa-procesos
+          path: docs/
+      - name: Agregar este proceso al documento
+        run: |
+          cat <<'EOF' >> docs/mapa-procesos.md
+          ## Proceso: 6.4.7 Implementación
+ 
+          - **Entradas:** Especificación de diseño, requisitos del incremento
+          - **Actividades:** Programar los módulos, escribir las pruebas unitarias y revisar el código en pull requests
+          - **Salidas:** Código fuente versionado, pruebas unitarias
+          - **Recursos:** React Native, Firebase SDK, GitHub, entorno de desarrollo
+ 
+          EOF
+      - name: Subir artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mapa-procesos
+          path: docs/mapa-procesos.md
+          overwrite: true
+ 
+  int:
+    name: "6.4.8 Integración"
+    needs: imp
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: mapa-procesos
+          path: docs/
+      - name: Agregar este proceso al documento
+        run: |
+          cat <<'EOF' >> docs/mapa-procesos.md
+          ## Proceso: 6.4.8 Integración
+ 
+          - **Entradas:** Módulos implementados, servicios externos configurados
+          - **Actividades:** Integrar los módulos nuevos con los existentes y con los servicios externos y ejecutar pruebas de integración
+          - **Salidas:** Versión integrada del incremento, reporte de pruebas de integración
+          - **Recursos:** GitHub Actions, entorno de pruebas de Firebase, cuentas de prueba de FCM y APNs
+ 
+          EOF
+      - name: Subir artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mapa-procesos
+          path: docs/mapa-procesos.md
+          overwrite: true
+ 
+  ver:
+    name: "6.4.9 Verificación"
+    needs: int
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: mapa-procesos
+          path: docs/
+      - name: Agregar este proceso al documento
+        run: |
+          cat <<'EOF' >> docs/mapa-procesos.md
+          ## Proceso: 6.4.9 Verificación
+ 
+          - **Entradas:** Versión integrada, requisitos con sus criterios de aceptación y métricas
+          - **Actividades:** Ejecutar las pruebas funcionales con los criterios Dado/Cuando/Entonces, las pruebas de rendimiento y de seguridad y registrar los defectos
+          - **Salidas:** Reporte de verificación, defectos registrados como Issues
+          - **Recursos:** Jest y herramientas de pruebas de React Native, Firebase Test Lab, dispositivos Android e iOS
+ 
+          EOF
+      - name: Subir artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mapa-procesos
+          path: docs/mapa-procesos.md
+          overwrite: true
+ 
+  tra:
+    name: "6.4.10 Transición"
+    needs: ver
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: mapa-procesos
+          path: docs/
+      - name: Agregar este proceso al documento
+        run: |
+          cat <<'EOF' >> docs/mapa-procesos.md
+          ## Proceso: 6.4.10 Transición
+ 
+          - **Entradas:** Versión verificada, notas de la versión
+          - **Actividades:** Preparar los binarios, publicarlos en Google Play y App Store, desplegar el portal veterinario y capacitar a los veterinarios de las clínicas piloto
+          - **Salidas:** Versión publicada en las tiendas, portal en producción
+          - **Recursos:** Cuentas de desarrollador de Google y Apple (INT-09), Firebase Hosting
+ 
+          EOF
+      - name: Subir artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mapa-procesos
+          path: docs/mapa-procesos.md
+          overwrite: true
+ 
+  val:
+    name: "6.4.11 Validación"
+    needs: tra
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -156,13 +275,13 @@ jobs:
       - name: Agregar este proceso al documento
         run: |
           cat <<'EOF' >> docs/mapa-procesos.md
-          ## Proceso: Testing
-
-          - **Entradas:** Componentes de software construidos
-          - **Actividades:** Diseño y ejecución de pruebas, registro de defectos
-          - **Salidas:** Reporte de pruebas, defectos identificados
-          - **Recursos:** Plan de pruebas, casos de prueba
-
+          ## Proceso: 6.4.11 Validación
+ 
+          - **Entradas:** Versión publicada, necesidades del negocio y de los interesados
+          - **Actividades:** Hacer pruebas de aceptación con dueños y veterinarios, aplicar el cuestionario SUS y recoger retroalimentación para el siguiente incremento
+          - **Salidas:** Acta de aceptación del incremento, puntaje SUS, ajustes para el siguiente incremento
+          - **Recursos:** Grupo piloto de usuarios, cuestionario SUS, formulario de retroalimentación
+ 
           EOF
       - name: Commit y push
         uses: stefanzweifel/git-auto-commit-action@v5
